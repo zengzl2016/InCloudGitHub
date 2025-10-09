@@ -3,6 +3,7 @@ GitHub仓库扫描模块
 """
 import time
 import re
+from datetime import datetime
 from typing import List, Dict, Optional
 from github import Github, GithubException
 from config import GITHUB_TOKEN, AI_SEARCH_KEYWORDS, MAX_REPOS_PER_SEARCH, SEARCH_DELAY_SECONDS
@@ -40,7 +41,8 @@ class GitHubScanner:
         """等待速率限制重置"""
         info = self.get_rate_limit_info()
         if info['remaining'] < 10:
-            wait_time = (info['reset'] - time.time()).total_seconds() + 10
+            # info['reset'] 是 datetime 对象，需要和 datetime.now() 比较
+            wait_time = (info['reset'] - datetime.now()).total_seconds() + 10
             print(f"⚠️  API速率限制即将耗尽，等待 {wait_time:.0f} 秒...")
             time.sleep(max(0, wait_time))
     
