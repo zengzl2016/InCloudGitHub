@@ -130,10 +130,17 @@ jobs:
           github.event.inputs.create_issue == 'true' && 
           steps.analyze.outputs.has_findings == 'true'
         uses: actions/github-script@v7
+        env:
+          FINDINGS_COUNT: ${{ steps.analyze.outputs.findings_count }}
+          SCAN_TYPE: ${{ github.event.inputs.scan_type }}
+          SCAN_TARGET: ${{ github.event.inputs.target }}
         with:
           script: |
             const fs = require('fs');
             const reportDir = 'scan_reports';
+            const findingsCount = process.env.FINDINGS_COUNT;
+            const scanType = process.env.SCAN_TYPE;
+            const scanTarget = process.env.SCAN_TARGET;
             
             if (fs.existsSync(reportDir)) {
               const files = fs.readdirSync(reportDir);
@@ -145,15 +152,15 @@ jobs:
                 await github.rest.issues.create({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  title: `🚨 [手动扫描] 发现 ${{ steps.analyze.outputs.findings_count }} 个潜在密钥泄露`,
+                  title: `🚨 [手动扫描] 发现 ${findingsCount} 个潜在密钥泄露`,
                   body: `# 🔍 手动扫描报告
                   
 ## 扫描信息
 
-- **扫描类型**: ${{ github.event.inputs.scan_type }}
-- **扫描目标**: ${{ github.event.inputs.target }}
+- **扫描类型**: ${scanType}
+- **扫描目标**: ${scanTarget}
 - **执行时间**: ${new Date().toLocaleString('zh-CN')}
-- **发现问题数**: ${{ steps.analyze.outputs.findings_count }}
+- **发现问题数**: ${findingsCount}
 - **Workflow Run**: [#${context.runNumber}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
 
 ## 📄 报告预览

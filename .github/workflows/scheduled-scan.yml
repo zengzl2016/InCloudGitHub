@@ -136,6 +136,10 @@ jobs:
       - name: 🚨 创建告警Issue（发现问题时）
         if: steps.analyze.outputs.needs_alert == 'true'
         uses: actions/github-script@v7
+        env:
+          TOTAL_FINDINGS: ${{ steps.analyze.outputs.total_findings }}
+          HIGH_CONFIDENCE: ${{ steps.analyze.outputs.high_confidence }}
+          MEDIUM_CONFIDENCE: ${{ steps.analyze.outputs.medium_confidence }}
         with:
           script: |
             const fs = require('fs');
@@ -146,9 +150,9 @@ jobs:
               const content = fs.readFileSync(reportPath, 'utf8');
               const preview = content.split('\n').slice(0, 150).join('\n');
               
-              const total = '${{ steps.analyze.outputs.total_findings }}';
-              const high = '${{ steps.analyze.outputs.high_confidence }}';
-              const medium = '${{ steps.analyze.outputs.medium_confidence }}';
+              const total = process.env.TOTAL_FINDINGS;
+              const high = process.env.HIGH_CONFIDENCE;
+              const medium = process.env.MEDIUM_CONFIDENCE;
               
               // 检查是否已存在今天的issue
               const today = new Date().toISOString().split('T')[0];
@@ -183,6 +187,9 @@ jobs:
                 });
               } else {
                 // 创建新issue
+                const highWarning = high > 0 ? '⚠️ 需立即处理' : '';
+                const mediumWarning = medium > 0 ? '⚠️ 建议审查' : '';
+                
                 await github.rest.issues.create({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -197,8 +204,8 @@ jobs:
 
 ## 📊 发现问题统计
 
-- 🔴 **高置信度**: ${high} 个 ${high > 0 ? '⚠️ 需立即处理' : ''}
-- 🟡 **中置信度**: ${medium} 个 ${medium > 0 ? '⚠️ 建议审查' : ''}
+- 🔴 **高置信度**: ${high} 个 ${highWarning}
+- 🟡 **中置信度**: ${medium} 个 ${mediumWarning}
 - 📦 **总计**: ${total} 个
 
 ## 📄 报告预览
@@ -229,7 +236,7 @@ ${preview}
 ---
 *🤖 此 Issue 由 GitHub Actions 自动创建 - [查看工作流](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/.github/workflows/scheduled-scan.yml)*`,
                   labels: ['security', 'auto-scan', 'needs-review'],
-                  assignees: []  // 可以在这里添加要通知的人
+                  assignees: []
                 });
               }
             }
