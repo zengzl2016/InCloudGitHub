@@ -32,6 +32,11 @@ on:
         type: boolean
         default: true
 
+# 添加权限设置
+permissions:
+  contents: read
+  issues: write  # 允许创建 Issue
+
 jobs:
   manual-scan:
     runs-on: ubuntu-latest
