@@ -37,7 +37,7 @@ ENV/
 
 # Scan reports
 scan_reports/
-*.txt
+scan_reports/*.txt
 
 # Logs
 *.log
