@@ -30,6 +30,11 @@ on:
         default: '50'
         type: string
 
+# 添加权限设置
+permissions:
+  contents: write  # 允许提交代码
+  issues: write    # 允许创建 Issue
+
 # 任务定义
 jobs:
   scan:

@@ -34,8 +34,8 @@ on:
 
 # 添加权限设置
 permissions:
-  contents: read
-  issues: write  # 允许创建 Issue
+  contents: write  # 允许提交代码
+  issues: write    # 允许创建 Issue
 
 jobs:
   manual-scan:
