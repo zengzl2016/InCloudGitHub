@@ -1,209 +1,394 @@
-# InCloud GitHub 云上扫描器
+# 🔍 AI API Key Scanner
 
 <div align="center">
 
-🔍 **AI API Key Leakage Scanner**
+**自动扫描 GitHub 仓库，发现泄露的 AI API 密钥**
 
-自动扫描 GitHub 仓库，发现泄露的 AI API 密钥和敏感信息
-
-[![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![GitHub Actions](https://img.shields.io/badge/automation-GitHub%20Actions-2088FF.svg)](https://github.com/features/actions)
+
+🚀 **完全基于 GitHub Actions，无需本地运行** | 💰 **公开仓库完全免费**
+
+[快速开始](#-快速开始-3-步启动) | [功能特性](#-功能特性) | [工作流说明](#-工作流说明) | [常见问题](#-常见问题)
 
 </div>
 
 ---
 
-## 🌟 特性
+## 📖 什么是这个工具？
 
-- 🤖 **GitHub Actions 自动化** - 云端定时扫描，无需本地运行
-- 🔍 **智能检测** - 支持 OpenAI、Anthropic 等多种 AI API 密钥格式
-- 📊 **详细报告** - 自动生成并保存扫描报告（保留 90 天）
-- 🔔 **自动告警** - 发现问题时自动创建 Issue
-- 🎯 **多种模式** - 支持用户/组织/单仓/自动搜索
-- 💰 **完全免费** - 公开仓库无限使用 GitHub Actions
+这是一个**自动化的安全扫描工具**，专门用于发现 GitHub 仓库中泄露的 AI API 密钥（如 OpenAI、Anthropic Claude 等）。
+
+### 💡 为什么需要它？
+
+- 🔐 API 密钥泄露可能导致账号被盗用、产生巨额费用
+- 🌐 公开仓库中的密钥任何人都可以看到和使用
+- ⚠️ 很多开发者不小心将密钥提交到 Git 历史中
+- 🔍 手动检查成百上千的仓库非常耗时
+
+### ✨ 这个工具的优势
+
+- ✅ **零配置运行** - Fork 后只需添加一个 Token
+- ✅ **全自动化** - 每天自动扫描，无需人工干预
+- ✅ **智能检测** - 自动过滤示例代码，减少误报
+- ✅ **详细报告** - 生成完整的扫描报告并保存 90 天
+- ✅ **即时告警** - 发现问题自动创建 Issue 通知
+- ✅ **完全免费** - 基于 GitHub Actions，公开仓库无限使用
 
 ---
 
-## 🚀 快速开始
+## 🚀 快速开始 (3 步启动)
 
-### 第 1 步：推送到 GitHub
+### 第 1 步：Fork 本仓库
 
-```bash
-# 克隆或下载本项目到本地
-cd ai-scan
+点击页面右上角的 **`Fork`** 按钮，将仓库 fork 到你的账号下。
 
-# 初始化 Git 仓库
-git init
-git add .
-git commit -m "feat: AI API Key Scanner"
+<details>
+<summary>📸 点击查看截图</summary>
 
-# 在 GitHub 创建新仓库，然后关联并推送
-git remote add origin https://github.com/YOUR_USERNAME/ai-scanner.git
-git branch -M main
-git push -u origin main
 ```
+在 GitHub 页面右上角：
+[Watch ▼] [Fork ▼] [Star]
+          ↑↑↑↑
+        点击这里
+```
+
+Fork 后，你将拥有：`https://github.com/YOUR_USERNAME/ai-scan`
+
+</details>
+
+---
 
 ### 第 2 步：配置 GitHub Token
 
-#### 2.1 获取 Personal Access Token
+#### 2.1 创建 Personal Access Token
 
-1. 访问：https://github.com/settings/tokens
-2. 点击 **"Generate new token"** → **"Generate new token (classic)"**
-3. 设置：
-   - **Note**: `AI Scanner Token`
-   - **Expiration**: 90 days 或更长
-   - **Scopes**: 
-     - ✅ `public_repo` - 访问公开仓库
-     - ✅ `read:org` - 读取组织信息（可选）
-4. 点击 **"Generate token"** 并复制
+1. **访问 Token 设置页面**
+   
+   点击这个链接 👉 https://github.com/settings/tokens
 
-#### 2.2 添加到仓库 Secrets
+2. **生成新 Token**
+   
+   - 点击 **`Generate new token`** → 选择 **`Generate new token (classic)`**
+   
+3. **填写信息**
+   
+   | 字段 | 填写内容 |
+   |------|---------|
+   | Note | `AI Scanner Token`（备注名称）|
+   | Expiration | `90 days` 或更长 |
+   | Scopes（权限） | ✅ `public_repo`（必需）<br>✅ `read:org`（可选，用于扫描组织）|
 
-1. 访问你的仓库设置：
-   ```
-   https://github.com/YOUR_USERNAME/ai-scanner/settings/secrets/actions
-   ```
-2. 点击 **"New repository secret"**
-3. 添加 Secret：
-   - **Name**: `GH_SCAN_TOKEN`
-   - **Value**: 粘贴你复制的 Token
-4. 点击 **"Add secret"**
+4. **生成并复制**
+   
+   - 点击页面底部的 **`Generate token`** 按钮
+   - ⚠️ **立即复制** Token（格式：`ghp_xxxxxxxxxxxx`）
+   - 离开页面后将无法再次查看！
 
-### 第 3 步：运行扫描
+<details>
+<summary>🔍 为什么需要这些权限？</summary>
 
-#### 选项 A：手动触发（推荐首次测试）
+- `public_repo`: 读取公开仓库的代码（扫描必需）
+- `read:org`: 读取组织信息（如果要扫描组织仓库）
 
-1. 访问 Actions 页面：
-   ```
-   https://github.com/YOUR_USERNAME/ai-scanner/actions
-   ```
+这些是**最小权限**，不会修改任何代码或仓库。
 
-2. 选择 **"AI API Key Scanner - Manual Scan"**
-
-3. 点击 **"Run workflow"** 按钮
-
-4. 填写参数：
-   - **Scan type**: `auto - 自动搜索AI项目`
-   - **Target**: 留空（auto 模式）
-   - **Max repos**: `5` （首次测试建议小数量）
-   - **Create issue**: ✅ 勾选
-
-5. 点击 **"Run workflow"** 开始扫描
-
-#### 选项 B：自动运行
-
-配置完成后，**每天 UTC 02:00（北京时间 10:00）** 会自动运行扫描。
+</details>
 
 ---
 
-## 📊 查看结果
+#### 2.2 添加 Token 到你的仓库
 
-### 1. 实时查看运行日志
+1. **进入你 Fork 的仓库设置**
+   
+   访问：`https://github.com/YOUR_USERNAME/ai-scan/settings/secrets/actions`
+   
+   或者：你的仓库页面 → `Settings` → 左侧菜单 `Secrets and variables` → `Actions`
 
-在 Actions 页面点击运行记录，可以看到：
-- 🔍 扫描进度
-- 📊 发现的问题统计
-- ✅ 执行状态
+2. **添加新 Secret**
+   
+   - 点击 **`New repository secret`** 按钮
+   - **Name**（名称）: `GH_SCAN_TOKEN`
+   - **Value**（值）: 粘贴你刚才复制的 Token
+   - 点击 **`Add secret`** 保存
 
-### 2. 下载完整报告
+<details>
+<summary>⚠️ 重要提示</summary>
 
-1. 进入运行详情页
-2. 滚动到页面底部的 **"Artifacts"** 区域
-3. 下载报告文件（TXT 格式，保留 90 天）
+- Secret 名称**必须**是 `GH_SCAN_TOKEN`（区分大小写）
+- Token 添加后无法查看，只能更新或删除
+- Token 是加密存储的，安全可靠
 
-### 3. 查看自动创建的 Issue
-
-如果发现潜在问题，系统会自动创建 Issue：
-- 🏷️ 标签：`security`, `auto-scan`
-- 📋 包含问题摘要、统计信息
-- 💡 提供安全建议和处理步骤
-
----
-
-## ⚙️ 工作流说明
-
-项目包含 3 个 GitHub Actions 工作流：
-
-### 1. `auto-scan.yml` - 基础自动扫描
-
-**功能**：
-- 每天定时自动扫描 AI 相关项目
-- 支持手动触发并选择扫描模式
-- 自动上传报告和创建 Issue
-
-**适用场景**：日常自动监控
+</details>
 
 ---
 
-### 2. `manual-scan.yml` - 手动扫描（推荐）
+### 第 3 步：启动扫描
 
-**功能**：
-- 完全手动控制的扫描
-- 支持 4 种扫描模式：
-  - 🤖 **Auto** - 自动搜索 AI 相关项目
-  - 👤 **User** - 扫描指定用户的所有仓库
-  - 🏢 **Org** - 扫描指定组织的所有仓库
-  - 📦 **Repo** - 扫描单个指定仓库
-- 可自定义所有参数
+配置完成后，你有两种方式启动扫描：
 
-**适用场景**：按需扫描特定目标
+#### 选项 A：手动触发（推荐首次使用）
 
-**使用示例**：
+1. **进入 Actions 页面**
+   
+   访问：`https://github.com/YOUR_USERNAME/ai-scan/actions`
+
+2. **选择工作流**
+   
+   在左侧列表中点击：**`AI API Key Scanner - Manual Scan`**
+
+3. **运行工作流**
+   
+   - 点击右侧的 **`Run workflow`** 下拉按钮
+   - 保持默认设置或修改参数：
+     - **Scan type**: `auto - 自动搜索AI项目`
+     - **Target**: 留空（auto 模式不需要）
+     - **Max repos**: `10`（首次建议少量测试）
+     - **Create issue**: ✅ 勾选
+   - 点击绿色的 **`Run workflow`** 按钮
+
+4. **查看进度**
+   
+   页面会刷新，显示正在运行的任务，点击进入可查看实时日志。
+
+<details>
+<summary>🎯 扫描模式说明</summary>
+
+| 模式 | 说明 | Target 填写 |
+|------|------|-----------|
+| **auto** | 自动搜索 AI 相关项目 | 留空 |
+| **user** | 扫描指定用户的所有仓库 | 用户名，如 `openai` |
+| **org** | 扫描指定组织的所有仓库 | 组织名，如 `microsoft` |
+| **repo** | 扫描单个仓库 | 仓库全名，如 `user/repo` |
+
+</details>
+
+---
+
+#### 选项 B：自动定时运行
+
+配置完成后，工作流将：
+- 🕐 **每天自动运行** - UTC 02:00（北京时间 10:00）
+- 📊 **自动生成报告** - 保存在 Artifacts 中
+- 🔔 **发现问题自动告警** - 创建 Issue 通知你
+
+你只需等待即可，无需任何操作！
+
+---
+
+## 📊 查看扫描结果
+
+### 1️⃣ 查看运行日志
+
+在 Actions 页面，点击任意运行记录：
+
 ```
-Scan type: user - 扫描指定用户
-Target: openai
-Max repos: 10
-Create issue: true
+✅ AI API Key Scanner - Manual Scan #12
+   └─ 🔍 执行扫描
+      └─ 📊 显示扫描摘要
+         └─ ✅ 扫描完成
 ```
 
----
-
-### 3. `scheduled-scan.yml` - 增强定时扫描
-
-**功能**：
-- 详细的扫描统计和分析
-- 智能 Issue 管理（同一天只创建一个 Issue）
-- 生成详细的扫描摘要
-- 超时保护（60 分钟）
-
-**适用场景**：企业级定期安全审计
+可以看到：
+- 扫描了多少个仓库
+- 发现了多少个问题
+- 每个仓库的扫描状态
 
 ---
 
-## 🎯 自定义配置
+### 2️⃣ 下载完整报告
+
+1. 滚动到运行详情页面底部
+2. 找到 **`Artifacts`** 区域
+3. 点击下载报告文件（TXT 格式）
+
+报告包含：
+- 📁 仓库地址和文件路径
+- 🔑 发现的密钥（部分隐藏保护安全）
+- 📊 置信度评级（高/中/低）
+- 💡 安全建议
+
+<details>
+<summary>📄 报告示例</summary>
+
+```txt
+============================================================
+       InCloud GitHub 云上扫描器 - 扫描报告
+============================================================
+
+扫描类型: auto:ai-projects
+发现的问题总数: 3
+
+────────────────────────────────────────────────
+🔍 仓库地址: https://github.com/user/repo
+   发现问题数: 2
+────────────────────────────────────────────────
+
+【问题 #1】
+  文件路径: src/config.py
+  行号: 15
+  发现的 API 密钥: sk-p****************************xyz
+  置信度: 🔴 HIGH
+  代码片段: OPENAI_API_KEY = "sk-proj-xxxxx..."
+
+────────────────────────────────────────────────
+统计信息
+────────────────────────────────────────────────
+
+🔴 高置信度: 1 个 ⚠️ 需立即处理
+🟡 中置信度: 2 个
+🟢 低置信度: 0 个
+
+🛡️ 安全建议:
+  1. 立即轮换所有泄露的 API 密钥
+  2. 使用环境变量存储敏感信息
+  3. 在 .gitignore 中添加敏感文件
+```
+
+</details>
+
+---
+
+### 3️⃣ 查看自动创建的 Issue
+
+如果扫描发现问题，会自动创建 Issue：
+
+- 🏷️ 带有 `security` 和 `auto-scan` 标签
+- 📋 包含问题摘要和统计信息
+- 💡 提供处理建议和步骤
+- 🔗 链接到完整报告
+
+前往你的仓库 **Issues** 页签查看。
+
+---
+
+## 🎯 功能特性
+
+### 🔍 智能检测
+
+- ✅ 支持多种 AI API 密钥格式：
+  - OpenAI: `sk-...`、`sk-proj-...`
+  - Anthropic: `sk-ant-...`
+  - 环境变量: `OPENAI_API_KEY=...`、`ANTHROPIC_API_KEY=...`
+- ✅ 自动过滤示例代码和占位符
+- ✅ 置信度评分（高/中/低）
+- ✅ 智能去重
+
+### 📊 详细报告
+
+- ✅ 包含仓库地址、文件路径、行号
+- ✅ 显示代码片段和上下文
+- ✅ 部分隐藏密钥保护安全
+- ✅ 统计分析和安全建议
+- ✅ 报告保留 90 天
+
+### 🔔 自动告警
+
+- ✅ 发现问题自动创建 Issue
+- ✅ 智能避免重复 Issue
+- ✅ 分类标记（security、auto-scan）
+- ✅ 包含处理建议
+
+### ⚙️ 灵活配置
+
+- ✅ 4 种扫描模式（auto/user/org/repo）
+- ✅ 自定义扫描数量
+- ✅ 自定义扫描时间（Cron）
+- ✅ 可添加自定义检测规则
+
+---
+
+## 🛠️ 工作流说明
+
+本项目包含 3 个 GitHub Actions 工作流，满足不同需求：
+
+### 1. Manual Scan（手动扫描）⭐ 推荐
+
+**文件**: `.github/workflows/manual-scan.yml`
+
+**触发方式**: 仅手动触发
+
+**适用场景**:
+- ✅ 首次测试
+- ✅ 按需扫描特定目标
+- ✅ 灵活控制参数
+
+**参数说明**:
+
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| Scan type | 扫描模式 | `auto - 自动搜索AI项目` |
+| Target | 扫描目标 | 留空（auto）/ `openai`（user）|
+| Max repos | 最大仓库数 | `10` / `50` / `100` |
+| Create issue | 是否创建 Issue | ✅ 勾选 |
+
+---
+
+### 2. Auto Scan（自动扫描）
+
+**文件**: `.github/workflows/auto-scan.yml`
+
+**触发方式**: 
+- 定时：每天 UTC 02:00
+- 手动触发
+
+**适用场景**: 日常自动监控
+
+---
+
+### 3. Scheduled Scan（增强定时扫描）
+
+**文件**: `.github/workflows/scheduled-scan.yml`
+
+**触发方式**: 
+- 定时：每天 UTC 02:00
+- 手动触发
+
+**适用场景**: 企业级定期安全审计
+
+**特点**:
+- 📊 详细的统计分析
+- 🧠 智能 Issue 管理
+- ⏱️ 超时保护（60 分钟）
+
+---
+
+## ⚙️ 自定义配置
 
 ### 修改扫描时间
 
-编辑 `.github/workflows/scheduled-scan.yml`：
+编辑 `.github/workflows/scheduled-scan.yml` 文件：
 
 ```yaml
 on:
   schedule:
-    - cron: '0 2 * * *'      # 每天 02:00 UTC
-    # - cron: '0 */12 * * *' # 每 12 小时
-    # - cron: '0 2 * * 1'    # 每周一
-    # - cron: '0 2 1 * *'    # 每月 1 号
+    - cron: '0 2 * * *'      # 当前：每天 02:00 UTC（北京时间 10:00）
+    # - cron: '0 */12 * * *' # 改为：每 12 小时一次
+    # - cron: '0 2 * * 1'    # 改为：每周一 02:00
+    # - cron: '0 2 1 * *'    # 改为：每月 1 号 02:00
 ```
 
-### Cron 表达式说明
+**Cron 表达式速查**:
 
-```
-分 时 日 月 周
-│ │ │ │ │
-│ │ │ │ └─── 星期 (0-6, 0=周日)
-│ │ │ └────── 月份 (1-12)
-│ │ └─────── 日期 (1-31)
-│ └──────── 小时 (0-23)
-└───────── 分钟 (0-59)
-```
+| 表达式 | 说明 | 示例时间 |
+|--------|------|----------|
+| `0 2 * * *` | 每天一次 | 每天 02:00 |
+| `0 */6 * * *` | 每 6 小时 | 00:00, 06:00, 12:00, 18:00 |
+| `0 0,12 * * *` | 每天两次 | 00:00 和 12:00 |
+| `0 2 * * 1` | 每周一次 | 每周一 02:00 |
+| `0 2 1 * *` | 每月一次 | 每月 1 号 02:00 |
 
-**常用示例**：
-- `0 2 * * *` - 每天 02:00
-- `0 */6 * * *` - 每 6 小时
-- `0 0,12 * * *` - 每天 00:00 和 12:00
-- `0 2 * * 1` - 每周一 02:00
-- `0 2 1 * *` - 每月 1 号 02:00
+<details>
+<summary>🕐 时区说明</summary>
+
+- GitHub Actions 使用 **UTC 时区**
+- 北京时间 = UTC + 8 小时
+- 例如：UTC 02:00 = 北京时间 10:00
+
+</details>
+
+---
 
 ### 修改扫描数量
 
@@ -212,70 +397,171 @@ on:
 ```yaml
 - name: 🔍 执行扫描
   run: |
-    python scan_github.py --auto --max-repos 100  # 修改此处
+    python scan_github.py --auto --max-repos 100  # 修改这个数字
 ```
 
-### 添加检测规则
+**建议值**:
+- 测试：5-10
+- 日常：50-100
+- 深度：100-200
 
-编辑 `config.py` 的 `SENSITIVE_PATTERNS`：
+---
+
+### 添加自定义检测规则
+
+编辑 `config.py` 文件：
 
 ```python
 SENSITIVE_PATTERNS = [
-    r'sk-[a-zA-Z0-9]{32,}',           # OpenAI
-    r'sk-ant-[a-zA-Z0-9_-]{32,}',     # Anthropic
-    r'your_custom_pattern',            # 添加自定义规则
+    # 现有规则
+    r'sk-[a-zA-Z0-9]{32,}',              # OpenAI
+    r'sk-ant-[a-zA-Z0-9_-]{32,}',        # Anthropic
+    
+    # 添加你的自定义规则
+    r'your_custom_api_key_pattern',       # 你的规则
+    r'SECRET_KEY[\s]*=[\s]*["\']?([a-zA-Z0-9_-]{20,})["\']?',
 ]
 ```
 
 ---
 
-## 📖 检测的密钥类型
+## ❓ 常见问题
 
-| 密钥类型 | 格式 | 服务商 |
-|---------|------|--------|
-| OpenAI API Key | `sk-...` | OpenAI |
-| OpenAI Project Key | `sk-proj-...` | OpenAI |
-| Anthropic API Key | `sk-ant-...` | Anthropic Claude |
-| 环境变量 | `OPENAI_API_KEY=...` | 通用 |
-| 环境变量 | `ANTHROPIC_API_KEY=...` | 通用 |
+<details>
+<summary><b>Q1: 为什么工作流没有自动运行？</b></summary>
+
+**可能原因**:
+1. GitHub Actions 未启用
+2. Cron 时间未到（首次设置后需等待）
+3. 仓库是私有的且超出免费额度
+
+**解决方法**:
+1. 检查 Actions 页面是否有错误提示
+2. 手动触发一次测试
+3. 确认仓库的 Actions 权限已启用
+
+</details>
+
+<details>
+<summary><b>Q2: 提示 "GitHub Token is required" 怎么办？</b></summary>
+
+**原因**: Secret 配置不正确
+
+**解决方法**:
+1. 确认 Secret 名称是 `GH_SCAN_TOKEN`（注意大小写）
+2. 检查 Token 是否过期
+3. 验证 Token 有 `public_repo` 权限
+4. 重新添加 Secret
+
+</details>
+
+<details>
+<summary><b>Q3: 扫描失败，提示 API 速率限制？</b></summary>
+
+**原因**: GitHub API 调用过于频繁
+
+**解决方法**:
+1. 减少 `--max-repos` 参数（如改为 20）
+2. 增加扫描间隔时间
+3. 确保使用了有效的 Token（速率限制更高）
+4. 等待 1 小时后重试
+
+</details>
+
+<details>
+<summary><b>Q4: 如何停止自动扫描？</b></summary>
+
+**方法 1**: 禁用工作流
+- Actions 页面 → 选择工作流 → "..." 菜单 → "Disable workflow"
+
+**方法 2**: 删除或重命名工作流文件
+- 删除 `.github/workflows/scheduled-scan.yml`
+- 或重命名为 `.github/workflows/scheduled-scan.yml.disabled`
+
+</details>
+
+<details>
+<summary><b>Q5: 可以扫描私有仓库吗？</b></summary>
+
+**技术上可以，但需要注意**:
+
+1. Token 需要 `repo` 权限（而不是 `public_repo`）
+2. 修改代码中的仓库过滤逻辑
+3. 私有仓库扫描需消耗 Actions 分钟数
+4. 注意隐私和安全策略
+
+**当前版本**: 设计为只扫描公开仓库，更加安全。
+
+</details>
+
+<details>
+<summary><b>Q6: 发现误报怎么办？</b></summary>
+
+**工具特点**:
+- 已自动过滤大部分示例代码
+- 提供置信度评分
+- 建议只关注高置信度的结果
+
+**如果仍有误报**:
+1. 检查低置信度的结果，大部分可以忽略
+2. 在 `config.py` 中调整检测规则
+3. 添加更多过滤条件
+
+</details>
+
+<details>
+<summary><b>Q7: 扫描会消耗多少 GitHub Actions 配额？</b></summary>
+
+**GitHub Actions 免费额度**:
+- **公开仓库**: 完全免费，无限分钟 ✅
+- **私有仓库**: 每月 2000 分钟（免费账户）
+
+**本项目消耗**:
+- 单次扫描（50 仓库）: 约 10-20 分钟
+- 每天运行一次: 约 300-600 分钟/月
+
+**结论**: 在公开仓库中使用**完全免费**！
+
+</details>
 
 ---
 
-## 🛡️ 发现泄露后的处理
+## 🛡️ 发现泄露密钥后怎么办？
 
-### ⚠️ 立即采取的行动
+### ⚠️ 立即采取的 4 个步骤
 
-1. **轮换密钥**
-   - 登录 API 提供商控制台
-   - 删除或禁用泄露的密钥
-   - 生成新的密钥
+#### 1️⃣ 立即轮换密钥
 
-2. **检查使用日志**
-   - 查看 API 调用记录
-   - 确认是否有异常使用
-   - 评估潜在影响
+- 登录 API 提供商控制台（OpenAI、Anthropic 等）
+- **删除或禁用**泄露的密钥
+- 生成新的密钥
 
-3. **清理 Git 历史**（如果是你的仓库）
-   ```bash
-   # 使用 BFG Repo-Cleaner
-   bfg --replace-text passwords.txt
-   
-   # 或使用 git-filter-repo
-   git filter-repo --invert-paths --path secrets.txt
-   ```
+#### 2️⃣ 检查使用日志
 
-4. **更新代码实践**
-   - 使用环境变量存储敏感信息
-   - 添加 `.gitignore` 规则
-   - 配置 pre-commit hooks
-   - 启用 GitHub Secret Scanning
+- 查看 API 调用记录
+- 确认是否有异常使用
+- 评估可能的损失
 
-### 🛡️ 预防措施
+#### 3️⃣ 清理 Git 历史
 
-**推荐的做法**：
+如果密钥在你的仓库中：
+
+```bash
+# 方法 1: 使用 BFG Repo-Cleaner（推荐）
+bfg --replace-text passwords.txt
+
+# 方法 2: 使用 git-filter-repo
+git filter-repo --invert-paths --path secrets.txt
+```
+
+⚠️ **注意**: 这些操作会改写 Git 历史，需谨慎操作。
+
+#### 4️⃣ 更新代码实践
+
+**正确的做法**:
 
 ```python
-# ✅ 正确：使用环境变量
+# ✅ 推荐：使用环境变量
 import os
 api_key = os.getenv('OPENAI_API_KEY')
 
@@ -283,10 +569,10 @@ api_key = os.getenv('OPENAI_API_KEY')
 api_key = "sk-proj-xxxxxxxxxxxx"
 ```
 
-**添加到 `.gitignore`**：
+**更新 `.gitignore`**:
 
 ```gitignore
-# 环境变量文件
+# 环境变量
 .env
 .env.local
 .env.*.local
@@ -299,164 +585,50 @@ credentials.json
 # 密钥文件
 *.key
 *.pem
+*.p12
 ```
 
----
+**配置 pre-commit hooks**:
 
-## ❓ 常见问题
-
-### Q: 工作流没有自动运行？
-
-**可能原因**：
-- GitHub Actions 未启用
-- Cron 时间未到（可能延迟 5-15 分钟）
-- 仓库是私有的且超出免费额度
-
-**解决方法**：
-- 检查 Actions 页面是否有错误
-- 手动触发一次测试
-- 查看仓库的 Actions 设置
-
-### Q: 提示 "GitHub Token is required"？
-
-**解决方法**：
-1. 确认 Secret 名称是 `GH_SCAN_TOKEN`
-2. 检查 Token 是否有效且未过期
-3. 确认 Token 有正确的权限
-
-### Q: API 速率限制？
-
-**解决方法**：
-- 减少 `--max-repos` 参数
-- 增加扫描间隔时间
-- 确保使用有效的 Token（未认证限制 60 次/小时，认证后 5000 次/小时）
-
-### Q: 如何停止自动扫描？
-
-**方法 1**：禁用工作流
-- Actions 页面 → 选择工作流 → "..." → "Disable workflow"
-
-**方法 2**：删除工作流文件
 ```bash
-git rm .github/workflows/scheduled-scan.yml
-git commit -m "Disable scheduled scan"
-git push
-```
+# 安装 pre-commit
+pip install pre-commit
 
-### Q: 成本如何？
+# 创建配置文件
+cat > .pre-commit-config.yaml << EOF
+repos:
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+EOF
 
-**GitHub Actions 免费额度**：
-- 公开仓库：**完全免费**，无限分钟 ✅
-- 私有仓库：每月 2000 分钟（免费计划）
-
-**本项目消耗**：
-- 单次扫描（50 仓库）：约 10-20 分钟
-- 每天一次：约 300-600 分钟/月
-
-**结论**：公开仓库使用完全免费！
-
----
-
-## 📁 项目结构
-
-```
-ai-scan/
-├── .github/workflows/       # GitHub Actions 工作流
-│   ├── auto-scan.yml       # 基础自动扫描
-│   ├── manual-scan.yml     # 手动扫描
-│   └── scheduled-scan.yml  # 增强定时扫描
-├── config.py               # 配置（检测规则、关键词）
-├── github_scanner.py       # GitHub API 交互
-├── secret_detector.py      # 敏感信息检测引擎
-├── report_generator.py     # 报告生成器
-├── scanner.py              # 主扫描器
-├── scan_github.py          # 命令行入口
-├── requirements.txt        # Python 依赖
-├── .gitignore             # Git 忽略规则
-├── LICENSE                # MIT 许可证
-└── README.md              # 本文件
+# 安装 hooks
+pre-commit install
 ```
 
 ---
 
-## 🔧 技术栈
+## 📚 相关资源
 
-- **语言**: Python 3.7+
-- **核心库**:
-  - `PyGithub` - GitHub API 交互
-  - `requests` - HTTP 请求
-  - `python-dotenv` - 环境变量管理
-- **自动化**: GitHub Actions
+- 📖 [GitHub Actions 文档](https://docs.github.com/actions)
+- 🔐 [GitHub Secret Scanning](https://docs.github.com/code-security/secret-scanning)
+- 🛡️ [OpenAI API 安全最佳实践](https://platform.openai.com/docs/guides/safety-best-practices)
+- 🔑 [如何保护 API 密钥](https://owasp.org/www-project-api-security/)
 
 ---
 
-## 🎯 最佳实践
+## 🤝 贡献
 
-1. **首次使用**
-   - 手动触发小规模测试（5-10 仓库）
-   - 检查报告格式和内容
-   - 验证 Issue 创建正常
+欢迎提交 Issue 和 Pull Request！
 
-2. **定期审查**
-   - 每周查看自动创建的 Issue
-   - 及时处理高置信度的发现
-   - 定期更新检测规则
+### 如何贡献
 
-3. **合理配置**
-   - 日常监控：每天一次
-   - 快速迭代期：每 12 小时一次
-   - 稳定期：每周一次
-
-4. **保护 Token**
-   - 定期轮换 Token（建议 90 天）
-   - 使用最小权限原则
-   - 不要在日志中打印 Token
-
----
-
-## 📊 报告示例
-
-```txt
-============================================================
-       InCloud GitHub 云上扫描器 - 扫描报告
-============================================================
-
-扫描类型: auto:ai-projects
-扫描开始时间: 2025-01-09 10:30:52
-报告生成时间: 2025-01-09 10:35:18
-发现的问题总数: 3
-
-============================================================
-
-────────────────────────────────────────────────────────────
-🔍 仓库地址: https://github.com/user/repo
-   发现问题数: 2
-────────────────────────────────────────────────────────────
-
-【问题 #1】
-  文件路径: src/config.py
-  行号: 15
-  发现的 API 密钥: sk-p****************************xyz
-  置信度: 🔴 HIGH
-  代码片段: OPENAI_API_KEY = "sk-proj-xxxxx..."
-
-【问题 #2】
-  文件路径: .env
-  行号: 3
-  发现的 API 密钥: sk-a****************************abc
-  置信度: 🟡 MEDIUM
-  代码片段: AI_API_KEY=sk-ant-xxxxx...
-
-============================================================
-统计信息
-============================================================
-
-🔴 高置信度: 1 个
-🟡 中置信度: 2 个
-🟢 低置信度: 0 个
-
-总计: 3 个潜在问题
-```
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
 
 ---
 
@@ -466,6 +638,7 @@ ai-scan/
 - 用户需对使用本工具的行为负责
 - 请遵守相关法律法规和 GitHub 使用条款
 - 扫描他人仓库前请确保有适当的授权
+- 工具可能存在误报或漏报，建议人工复核
 
 ---
 
@@ -475,15 +648,24 @@ ai-scan/
 
 ---
 
-## 🤝 贡献
+## ⭐ 如果觉得有用
 
-欢迎提交 Issue 和 Pull Request！
+如果这个工具帮助到了你：
+
+- ⭐ 给项目点个 Star
+- 🔀 Fork 并使用
+- 📢 分享给其他开发者
+- 🐛 报告问题或建议改进
 
 ---
 
 <div align="center">
 
-**使用 GitHub Actions 让你的代码更安全！** 🛡️
+### 🛡️ 让你的代码更安全！
+
+**现在就 Fork 并开始使用吧！** 👆
+
+---
 
 Made with ❤️ for Security
 
