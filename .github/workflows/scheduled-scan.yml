@@ -169,11 +169,7 @@ jobs:
               
               if (todayIssue) {
                 // 更新现有issue
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: todayIssue.number,
-                  body: `## 🔄 更新：新的扫描发现
+                const updateBody = `## 🔄 更新：新的扫描发现
                   
 **扫描时间**: ${new Date().toLocaleString('zh-CN')}
 **运行**: [#${context.runNumber}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
@@ -183,18 +179,21 @@ jobs:
 - 🟡 中置信度: ${medium}  
 - 📦 总计: ${total}
 
-完整报告请查看 Artifacts。`
+完整报告请查看 Artifacts。`;
+                
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: todayIssue.number,
+                  body: updateBody
                 });
               } else {
                 // 创建新issue
                 const highWarning = high > 0 ? '⚠️ 需立即处理' : '';
                 const mediumWarning = medium > 0 ? '⚠️ 建议审查' : '';
                 
-                await github.rest.issues.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  title: `🚨 [${today}] 安全扫描发现 ${total} 个潜在密钥泄露`,
-                  body: `# 🔍 自动扫描告警
+                const issueTitle = `🚨 [${today}] 安全扫描发现 ${total} 个潜在密钥泄露`;
+                const issueBody = `# 🔍 自动扫描告警
 
 ## 📋 扫描信息
 
@@ -234,7 +233,13 @@ ${preview}
 下次自动扫描将在明天同一时间执行。
 
 ---
-*🤖 此 Issue 由 GitHub Actions 自动创建 - [查看工作流](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/.github/workflows/scheduled-scan.yml)*`,
+*🤖 此 Issue 由 GitHub Actions 自动创建 - [查看工作流](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/.github/workflows/scheduled-scan.yml)*`;
+                
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issueTitle,
+                  body: issueBody,
                   labels: ['security', 'auto-scan', 'needs-review'],
                   assignees: []
                 });

@@ -149,11 +149,8 @@ jobs:
                 const content = fs.readFileSync(reportPath, 'utf8');
                 const preview = content.split('\n').slice(0, 120).join('\n');
                 
-                await github.rest.issues.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  title: `🚨 [手动扫描] 发现 ${findingsCount} 个潜在密钥泄露`,
-                  body: `# 🔍 手动扫描报告
+                const issueTitle = `🚨 [手动扫描] 发现 ${findingsCount} 个潜在密钥泄露`;
+                const issueBody = `# 🔍 手动扫描报告
                   
 ## 扫描信息
 
@@ -181,7 +178,13 @@ ${preview}
 4. 更新 .gitignore 防止未来泄露
 
 ---
-*此 Issue 由 GitHub Actions 自动创建*`,
+*此 Issue 由 GitHub Actions 自动创建*`;
+                
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issueTitle,
+                  body: issueBody,
                   labels: ['security', 'manual-scan', 'needs-review']
                 });
               }
