@@ -106,18 +106,20 @@ class GitHubScanner:
             print(f"❌ 获取组织仓库失败: {e}")
             return []
     
-    def search_ai_repos(self, max_repos: int = MAX_REPOS_PER_SEARCH) -> List[Dict]:
+    def search_ai_repos(self, max_repos: int = MAX_REPOS_PER_SEARCH, skip_filter=None) -> List[Dict]:
         """
         搜索AI相关的GitHub项目
         
         Args:
             max_repos: 最大返回仓库数量
+            skip_filter: 可选的过滤函数，接受仓库全名，返回True表示跳过该仓库
             
         Returns:
             仓库信息列表
         """
         all_repos = []
         seen_repos = set()
+        skipped_count = 0
         
         for keyword in AI_SEARCH_KEYWORDS:
             try:
@@ -129,35 +131,50 @@ class GitHubScanner:
                 results = self.github.search_code(query, order='desc')
                 
                 # 从代码搜索结果中提取仓库
-                count = 0
                 for code in results:
-                    if count >= max_repos:
+                    # 如果已经找到足够的仓库，停止搜索
+                    if len(all_repos) >= max_repos:
                         break
                     
                     repo = code.repository
-                    if repo.full_name not in seen_repos and not repo.private:
-                        seen_repos.add(repo.full_name)
-                        all_repos.append({
-                            'name': repo.name,
-                            'full_name': repo.full_name,
-                            'url': repo.html_url,
-                            'clone_url': repo.clone_url,
-                            'description': repo.description,
-                            'updated_at': repo.updated_at,
-                        })
-                        count += 1
+                    
+                    # 跳过私有仓库和已经见过的仓库
+                    if repo.private or repo.full_name in seen_repos:
+                        continue
+                    
+                    seen_repos.add(repo.full_name)
+                    
+                    # 如果提供了过滤函数，检查是否应该跳过
+                    if skip_filter and skip_filter(repo.full_name):
+                        skipped_count += 1
+                        print(f"  ⏭️  跳过已扫描: {repo.full_name}")
+                        continue  # 不计数，继续找下一个
+                    
+                    # 添加到结果列表
+                    all_repos.append({
+                        'name': repo.name,
+                        'full_name': repo.full_name,
+                        'url': repo.html_url,
+                        'clone_url': repo.clone_url,
+                        'description': repo.description,
+                        'updated_at': repo.updated_at,
+                    })
                 
                 # 延迟以避免触发速率限制
                 time.sleep(SEARCH_DELAY_SECONDS)
                 
                 if len(all_repos) >= max_repos:
+                    print(f"✅ 已找到 {len(all_repos)} 个未扫描的仓库（跳过了 {skipped_count} 个已扫描的）")
                     break
                     
             except GithubException as e:
                 print(f"⚠️  搜索 '{keyword}' 时出错: {e}")
                 continue
         
-        return all_repos[:max_repos]
+        if skipped_count > 0 and len(all_repos) < max_repos:
+            print(f"ℹ️  找到 {len(all_repos)} 个未扫描的仓库（跳过了 {skipped_count} 个已扫描的）")
+        
+        return all_repos
     
     def get_repo_files(self, repo_full_name: str, path: str = "") -> List[Dict]:
         """

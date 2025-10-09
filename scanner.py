@@ -165,29 +165,22 @@ class CloudScanner:
             报告文件路径
         """
         print(f"🚀 开始自动搜索 AI 相关项目")
+        print(f"🎯 目标: 找到并扫描 {max_repos} 个未扫描的仓库")
         scan_start_time = datetime.now()
         self.scan_start_time = time.time()  # 开始计时
         
-        # 为了确保能找到足够的新仓库，搜索更多的仓库（3倍）
-        # 这样即使前面的都扫描过了，也能找到新的
-        search_multiplier = 3
-        search_count = max_repos * search_multiplier
+        # 定义过滤函数：检查仓库是否已扫描
+        def is_scanned(repo_full_name: str) -> bool:
+            return self.scan_history.is_scanned(repo_full_name)
         
-        print(f"🔍 搜索 {search_count} 个仓库（期望获得 {max_repos} 个未扫描的）...")
-        repos = self.github_scanner.search_ai_repos(max_repos=search_count)
-        print(f"📦 找到 {len(repos)} 个相关仓库")
+        # 搜索仓库，实时过滤已扫描的
+        # 搜索过程会自动跳过已扫描的仓库，直到找到足够数量的新仓库
+        repos_to_scan = self.github_scanner.search_ai_repos(
+            max_repos=max_repos,
+            skip_filter=is_scanned if self.skip_scanned else None
+        )
         
-        # 过滤已扫描的仓库
-        repos_to_scan, skipped_count = self._filter_scanned_repos(repos)
-        if skipped_count > 0:
-            print(f"⏭️  跳过 {skipped_count} 个已扫描的仓库")
-        
-        # 限制为用户请求的数量
-        if len(repos_to_scan) > max_repos:
-            repos_to_scan = repos_to_scan[:max_repos]
-            print(f"📦 将扫描 {len(repos_to_scan)} 个新仓库（已达到请求数量）")
-        else:
-            print(f"📦 将扫描 {len(repos_to_scan)} 个新仓库")
+        print(f"📦 找到 {len(repos_to_scan)} 个待扫描的仓库")
         
         # 扫描所有仓库
         all_findings = []
