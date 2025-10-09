@@ -35,9 +35,12 @@ ENV/
 # Environment variables
 .env
 
-# Scan reports
-scan_reports/
-scan_reports/*.txt
+# Scan reports - 现在提交到仓库（私密仓库安全）
+# scan_reports/ - 不再忽略，需要提交到仓库
+# scan_reports/*.txt - 不再忽略
+
+# Scan history (keep this in repo for tracking)
+# scan_history/ - 不要忽略，需要提交到仓库
 
 # Logs
 *.log

@@ -111,6 +111,42 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
       
+      - name: 💾 提交扫描历史和报告
+        if: always()
+        run: |
+          git config user.name "gaocaipeng"
+          git config user.email "2540225402@qq.com"
+          
+          # 添加扫描历史
+          git add scan_history/
+          
+          # 添加扫描报告
+          if [ -d "scan_reports" ] && [ "$(ls -A scan_reports 2>/dev/null)" ]; then
+            git add scan_reports/
+            echo "✅ 发现扫描报告，将一并提交"
+          fi
+          
+          # 检查是否有更改
+          if git diff --cached --quiet; then
+            echo "没有新的扫描历史或报告"
+          else
+            # 统计信息
+            HISTORY_CHANGED=$(git diff --cached --name-only | grep "scan_history/" | wc -l | tr -d ' ')
+            REPORTS_CHANGED=$(git diff --cached --name-only | grep "scan_reports/" | wc -l | tr -d ' ')
+            
+            # 提交消息
+            COMMIT_MSG="📝 更新扫描数据 [skip ci]"
+            if [ "$HISTORY_CHANGED" -gt 0 ] && [ "$REPORTS_CHANGED" -gt 0 ]; then
+              COMMIT_MSG="📝 更新扫描历史和报告 [skip ci]"
+            elif [ "$REPORTS_CHANGED" -gt 0 ]; then
+              COMMIT_MSG="📄 添加扫描报告 [skip ci]"
+            fi
+            
+            git commit -m "$COMMIT_MSG"
+            git push
+            echo "✅ 已提交: 历史文件 $HISTORY_CHANGED 个, 报告文件 $REPORTS_CHANGED 个"
+          fi
+      
       - name: 🔔 分析结果
         id: analyze
         if: always()

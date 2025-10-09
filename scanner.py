@@ -6,21 +6,25 @@ from typing import List, Dict, Optional
 from github_scanner import GitHubScanner
 from secret_detector import SecretDetector
 from report_generator import ReportGenerator
+from scan_history import ScanHistory
 
 
 class CloudScanner:
     """云上扫描器 - 主要扫描逻辑"""
     
-    def __init__(self, github_token: str):
+    def __init__(self, github_token: str, skip_scanned: bool = True):
         """
         初始化扫描器
         
         Args:
             github_token: GitHub Personal Access Token
+            skip_scanned: 是否跳过已扫描的仓库 (默认: True)
         """
         self.github_scanner = GitHubScanner(github_token)
         self.secret_detector = SecretDetector()
         self.report_generator = ReportGenerator()
+        self.scan_history = ScanHistory()
+        self.skip_scanned = skip_scanned
     
     def scan_user(self, username: str) -> str:
         """
@@ -39,11 +43,17 @@ class CloudScanner:
         repos = self.github_scanner.get_user_repos(username)
         print(f"📦 找到 {len(repos)} 个公开仓库")
         
+        # 过滤已扫描的仓库
+        repos_to_scan, skipped_count = self._filter_scanned_repos(repos)
+        if skipped_count > 0:
+            print(f"⏭️  跳过 {skipped_count} 个已扫描的仓库")
+            print(f"📦 需要扫描 {len(repos_to_scan)} 个新仓库")
+        
         # 扫描所有仓库
         all_findings = []
-        for idx, repo in enumerate(repos, 1):
-            print(f"🔍 [{idx}/{len(repos)}] 扫描仓库: {repo['full_name']}")
-            findings = self._scan_repository(repo)
+        for idx, repo in enumerate(repos_to_scan, 1):
+            print(f"🔍 [{idx}/{len(repos_to_scan)}] 扫描仓库: {repo['full_name']}")
+            findings = self._scan_repository(repo, scan_type=f"user:{username}")
             all_findings.extend(findings)
         
         # 生成报告
@@ -77,11 +87,17 @@ class CloudScanner:
         repos = self.github_scanner.get_org_repos(org_name)
         print(f"📦 找到 {len(repos)} 个公开仓库")
         
+        # 过滤已扫描的仓库
+        repos_to_scan, skipped_count = self._filter_scanned_repos(repos)
+        if skipped_count > 0:
+            print(f"⏭️  跳过 {skipped_count} 个已扫描的仓库")
+            print(f"📦 需要扫描 {len(repos_to_scan)} 个新仓库")
+        
         # 扫描所有仓库
         all_findings = []
-        for idx, repo in enumerate(repos, 1):
-            print(f"🔍 [{idx}/{len(repos)}] 扫描仓库: {repo['full_name']}")
-            findings = self._scan_repository(repo)
+        for idx, repo in enumerate(repos_to_scan, 1):
+            print(f"🔍 [{idx}/{len(repos_to_scan)}] 扫描仓库: {repo['full_name']}")
+            findings = self._scan_repository(repo, scan_type=f"org:{org_name}")
             all_findings.extend(findings)
         
         # 生成报告
@@ -115,11 +131,17 @@ class CloudScanner:
         repos = self.github_scanner.search_ai_repos(max_repos=max_repos)
         print(f"📦 找到 {len(repos)} 个相关仓库")
         
+        # 过滤已扫描的仓库
+        repos_to_scan, skipped_count = self._filter_scanned_repos(repos)
+        if skipped_count > 0:
+            print(f"⏭️  跳过 {skipped_count} 个已扫描的仓库")
+            print(f"📦 需要扫描 {len(repos_to_scan)} 个新仓库")
+        
         # 扫描所有仓库
         all_findings = []
-        for idx, repo in enumerate(repos, 1):
-            print(f"🔍 [{idx}/{len(repos)}] 扫描仓库: {repo['full_name']}")
-            findings = self._scan_repository(repo)
+        for idx, repo in enumerate(repos_to_scan, 1):
+            print(f"🔍 [{idx}/{len(repos_to_scan)}] 扫描仓库: {repo['full_name']}")
+            findings = self._scan_repository(repo, scan_type="auto:ai-projects")
             all_findings.extend(findings)
         
         # 生成报告
@@ -173,18 +195,45 @@ class CloudScanner:
         
         return report_path
     
-    def _scan_repository(self, repo: Dict) -> List[Dict]:
+    def _filter_scanned_repos(self, repos: List[Dict]) -> tuple:
+        """
+        过滤已扫描的仓库
+        
+        Args:
+            repos: 仓库列表
+            
+        Returns:
+            (需要扫描的仓库列表, 跳过的仓库数量)
+        """
+        if not self.skip_scanned:
+            return repos, 0
+        
+        repos_to_scan = []
+        skipped_count = 0
+        
+        for repo in repos:
+            repo_name = repo.get('full_name', '')
+            if self.scan_history.is_scanned(repo_name):
+                skipped_count += 1
+            else:
+                repos_to_scan.append(repo)
+        
+        return repos_to_scan, skipped_count
+    
+    def _scan_repository(self, repo: Dict, scan_type: str = "unknown") -> List[Dict]:
         """
         扫描单个仓库
         
         Args:
             repo: 仓库信息字典
+            scan_type: 扫描类型
             
         Returns:
             发现的敏感信息列表
         """
         findings = []
         scan_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        repo_name = repo.get('full_name', 'unknown')
         
         try:
             # 获取仓库文件列表
@@ -224,8 +273,13 @@ class CloudScanner:
                 print(f"  ⚠️  发现 {len(findings)} 个潜在问题")
             else:
                 print(f"  ✅ 未发现明显问题")
+            
+            # 记录到扫描历史
+            self.scan_history.mark_as_scanned(repo_name, len(findings), scan_type)
                 
         except Exception as e:
             print(f"  ❌ 扫描失败: {e}")
+            # 即使扫描失败，也记录以避免反复尝试
+            self.scan_history.mark_as_scanned(repo_name, 0, f"{scan_type}:failed")
         
         return findings

@@ -109,6 +109,12 @@ def main():
         help='报告输出目录 (可选，默认: ./scan_reports)'
     )
     
+    parser.add_argument(
+        '--no-skip-scanned',
+        action='store_true',
+        help='不跳过已扫描的仓库，强制重新扫描所有仓库'
+    )
+    
     # 解析参数
     args = parser.parse_args()
     
@@ -130,7 +136,8 @@ def main():
     
     try:
         # 创建扫描器实例
-        scanner = CloudScanner(token)
+        skip_scanned = not args.no_skip_scanned
+        scanner = CloudScanner(token, skip_scanned=skip_scanned)
         
         # 根据参数执行不同的扫描
         if args.user:
