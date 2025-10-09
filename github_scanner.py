@@ -187,7 +187,11 @@ class GitHubScanner:
             
             return files
         except GithubException as e:
-            print(f"⚠️  获取文件列表失败: {e}")
+            # 403 错误直接跳过，不等待
+            if e.status == 403:
+                print(f"  ⏭️  跳过: 无权访问 (403 Forbidden)")
+            else:
+                print(f"⚠️  获取文件列表失败: {e}")
             return []
     
     def get_file_content(self, repo_full_name: str, file_path: str) -> Optional[str]:
@@ -211,5 +215,8 @@ class GitHubScanner:
             except UnicodeDecodeError:
                 # 如果是二进制文件，返回None
                 return None
-        except GithubException:
+        except GithubException as e:
+            # 403 错误直接跳过，不打印错误
+            if e.status == 403:
+                pass  # 静默跳过
             return None

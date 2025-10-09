@@ -1,6 +1,7 @@
 """
 主扫描器模块 - 整合所有功能
 """
+import time
 from datetime import datetime
 from typing import List, Dict, Optional
 from github_scanner import GitHubScanner
@@ -12,19 +13,48 @@ from scan_history import ScanHistory
 class CloudScanner:
     """云上扫描器 - 主要扫描逻辑"""
     
-    def __init__(self, github_token: str, skip_scanned: bool = True):
+    def __init__(self, github_token: str, skip_scanned: bool = True, timeout_minutes: int = 50):
         """
         初始化扫描器
         
         Args:
             github_token: GitHub Personal Access Token
             skip_scanned: 是否跳过已扫描的仓库 (默认: True)
+            timeout_minutes: 扫描超时时间（分钟），默认50分钟
         """
         self.github_scanner = GitHubScanner(github_token)
         self.secret_detector = SecretDetector()
         self.report_generator = ReportGenerator()
         self.scan_history = ScanHistory()
         self.skip_scanned = skip_scanned
+        self.timeout_seconds = timeout_minutes * 60
+        self.scan_start_time = None
+    
+    def _is_timeout(self) -> bool:
+        """检查是否超时"""
+        if self.scan_start_time is None:
+            return False
+        elapsed = time.time() - self.scan_start_time
+        return elapsed >= self.timeout_seconds
+    
+    def _check_timeout(self, current_idx: int, total_repos: int) -> bool:
+        """
+        检查是否超时，如果超时则打印信息并返回True
+        
+        Args:
+            current_idx: 当前扫描的仓库索引
+            total_repos: 总仓库数
+            
+        Returns:
+            是否超时
+        """
+        if self._is_timeout():
+            elapsed_minutes = (time.time() - self.scan_start_time) / 60
+            print(f"\n⏰ 扫描超时（已运行 {elapsed_minutes:.1f} 分钟）")
+            print(f"✅ 已完成 {current_idx}/{total_repos} 个仓库的扫描")
+            print(f"💾 已保存前面的扫描数据，剩余 {total_repos - current_idx} 个仓库将在下次扫描时处理")
+            return True
+        return False
     
     def scan_user(self, username: str) -> str:
         """
@@ -38,6 +68,7 @@ class CloudScanner:
         """
         print(f"🚀 开始扫描用户: {username}")
         scan_start_time = datetime.now()
+        self.scan_start_time = time.time()  # 开始计时
         
         # 获取用户的所有仓库
         repos = self.github_scanner.get_user_repos(username)
@@ -52,6 +83,10 @@ class CloudScanner:
         # 扫描所有仓库
         all_findings = []
         for idx, repo in enumerate(repos_to_scan, 1):
+            # 检查超时
+            if self._check_timeout(idx - 1, len(repos_to_scan)):
+                break
+            
             print(f"🔍 [{idx}/{len(repos_to_scan)}] 扫描仓库: {repo['full_name']}")
             findings = self._scan_repository(repo, scan_type=f"user:{username}")
             all_findings.extend(findings)
@@ -82,6 +117,7 @@ class CloudScanner:
         """
         print(f"🚀 开始扫描组织: {org_name}")
         scan_start_time = datetime.now()
+        self.scan_start_time = time.time()  # 开始计时
         
         # 获取组织的所有仓库
         repos = self.github_scanner.get_org_repos(org_name)
@@ -96,6 +132,10 @@ class CloudScanner:
         # 扫描所有仓库
         all_findings = []
         for idx, repo in enumerate(repos_to_scan, 1):
+            # 检查超时
+            if self._check_timeout(idx - 1, len(repos_to_scan)):
+                break
+            
             print(f"🔍 [{idx}/{len(repos_to_scan)}] 扫描仓库: {repo['full_name']}")
             findings = self._scan_repository(repo, scan_type=f"org:{org_name}")
             all_findings.extend(findings)
@@ -126,6 +166,7 @@ class CloudScanner:
         """
         print(f"🚀 开始自动搜索 AI 相关项目")
         scan_start_time = datetime.now()
+        self.scan_start_time = time.time()  # 开始计时
         
         # 搜索AI相关仓库
         repos = self.github_scanner.search_ai_repos(max_repos=max_repos)
@@ -140,6 +181,10 @@ class CloudScanner:
         # 扫描所有仓库
         all_findings = []
         for idx, repo in enumerate(repos_to_scan, 1):
+            # 检查超时
+            if self._check_timeout(idx - 1, len(repos_to_scan)):
+                break
+            
             print(f"🔍 [{idx}/{len(repos_to_scan)}] 扫描仓库: {repo['full_name']}")
             findings = self._scan_repository(repo, scan_type="auto:ai-projects")
             all_findings.extend(findings)
@@ -239,6 +284,12 @@ class CloudScanner:
             # 获取仓库文件列表
             files = self.github_scanner.get_repo_files(repo['full_name'])
             
+            # 如果获取文件列表失败（例如403错误），直接返回
+            if not files:
+                # 记录到扫描历史，避免下次再扫
+                self.scan_history.mark_as_scanned(repo_name, 0, f"{scan_type}:no-access")
+                return findings
+            
             # 扫描每个文件
             for file_info in files:
                 # 检查是否应该扫描该文件
@@ -260,7 +311,7 @@ class CloudScanner:
                     
                     # 添加仓库信息
                     for secret in secrets:
-                        secret['repo_url'] = repo['url']
+                        secret['repo_url'] = repo.get('url', f"https://github.com/{repo_name}")
                         secret['repo_name'] = repo['full_name']
                         secret['scan_time'] = scan_time
                         findings.append(secret)
@@ -278,8 +329,14 @@ class CloudScanner:
             self.scan_history.mark_as_scanned(repo_name, len(findings), scan_type)
                 
         except Exception as e:
-            print(f"  ❌ 扫描失败: {e}")
-            # 即使扫描失败，也记录以避免反复尝试
-            self.scan_history.mark_as_scanned(repo_name, 0, f"{scan_type}:failed")
+            error_msg = str(e)
+            # 403错误静默处理
+            if "403" in error_msg or "Forbidden" in error_msg:
+                print(f"  ⏭️  跳过: 无权访问")
+                self.scan_history.mark_as_scanned(repo_name, 0, f"{scan_type}:forbidden")
+            else:
+                print(f"  ❌ 扫描失败: {e}")
+                # 即使扫描失败，也记录以避免反复尝试
+                self.scan_history.mark_as_scanned(repo_name, 0, f"{scan_type}:failed")
         
         return findings
