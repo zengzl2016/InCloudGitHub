@@ -45,8 +45,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip'
-          cache-dependency-path: 'requirements.txt'
       
       # 3. 安装依赖
       - name: 📦 安装依赖
@@ -91,7 +89,8 @@ jobs:
         with:
           name: scan-report-${{ github.run_number }}
           path: scan_reports/
-          retention-days: 90  # 保留90天
+          retention-days: 90
+          if-no-files-found: ignore
       
       # 10. 显示报告摘要
       - name: 📊 显示扫描摘要

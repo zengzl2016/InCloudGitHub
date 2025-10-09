@@ -38,11 +38,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip'
-          cache-dependency-path: 'requirements.txt'
       
       - name: 📦 安装依赖
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
       
       - name: ⚙️ 配置环境
@@ -128,11 +127,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: scheduled-scan-${{ github.run_number }}-$(date +%Y%m%d)
+          name: scheduled-scan-${{ github.run_number }}
           path: |
             scan_reports/
             scan.log
           retention-days: 90
+          if-no-files-found: ignore
       
       - name: 🚨 创建告警Issue（发现问题时）
         if: steps.analyze.outputs.needs_alert == 'true'
