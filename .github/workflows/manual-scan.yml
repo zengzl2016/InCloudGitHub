@@ -150,35 +150,37 @@ jobs:
                 const preview = content.split('\n').slice(0, 120).join('\n');
                 
                 const issueTitle = `🚨 [手动扫描] 发现 ${findingsCount} 个潜在密钥泄露`;
-                const issueBody = `# 🔍 手动扫描报告
-                  
-## 扫描信息
-
-- **扫描类型**: ${scanType}
-- **扫描目标**: ${scanTarget}
-- **执行时间**: ${new Date().toLocaleString('zh-CN')}
-- **发现问题数**: ${findingsCount}
-- **Workflow Run**: [#${context.runNumber}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
-
-## 📄 报告预览
-
-\`\`\`
-${preview}
-\`\`\`
-
-## 🔗 完整报告
-
-请从 [Artifacts](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) 下载完整报告。
-
-## ⚠️ 建议操作
-
-1. 立即检查报告中标记的高置信度问题
-2. 轮换所有泄露的 API 密钥
-3. 使用环境变量或密钥管理服务
-4. 更新 .gitignore 防止未来泄露
-
----
-*此 Issue 由 GitHub Actions 自动创建*`;
+                const issueBody = [
+                  '# 🔍 手动扫描报告',
+                  '',
+                  '## 扫描信息',
+                  '',
+                  `- 扫描类型: ${scanType}`,
+                  `- 扫描目标: ${scanTarget}`,
+                  `- 执行时间: ${new Date().toLocaleString('zh-CN')}`,
+                  `- 发现问题数: ${findingsCount}`,
+                  `- Workflow Run: [#${context.runNumber}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+                  '',
+                  '## 📄 报告预览',
+                  '',
+                  '```',
+                  preview,
+                  '```',
+                  '',
+                  '## 🔗 完整报告',
+                  '',
+                  `请从 [Artifacts](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) 下载完整报告。`,
+                  '',
+                  '## ⚠️ 建议操作',
+                  '',
+                  '1. 立即检查报告中标记的高置信度问题',
+                  '2. 轮换所有泄露的 API 密钥',
+                  '3. 使用环境变量或密钥管理服务',
+                  '4. 更新 .gitignore 防止未来泄露',
+                  '',
+                  '---',
+                  '*此 Issue 由 GitHub Actions 自动创建*'
+                ].join('\n');
                 
                 await github.rest.issues.create({
                   owner: context.repo.owner,
