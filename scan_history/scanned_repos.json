@@ -629,8 +629,15 @@
       "findings_count": 0,
       "scan_type": "auto:ai-projects",
       "scan_count": 1
+    },
+    "Niranjan5168/EnginSync-Placement-preparation-for-Engineering-Students": {
+      "first_scan": "2025-10-13 04:11:27",
+      "last_scan": "2025-10-13 04:11:27",
+      "findings_count": 2,
+      "scan_type": "auto:ai-projects",
+      "scan_count": 1
     }
   },
-  "total_scanned": 90,
-  "last_updated": "2025-10-12 03:17:03"
+  "total_scanned": 91,
+  "last_updated": "2025-10-13 04:11:27"
 }
