@@ -171,6 +171,14 @@ jobs:
             fi
             
             git commit -m "$COMMIT_MSG"
+            
+            # 同步远程更改，避免并发推送冲突
+            git pull --rebase origin main || {
+              echo "⚠️ Rebase 冲突，尝试使用本地版本"
+              git rebase --abort
+              git pull --rebase --strategy-option=ours origin main
+            }
+            
             git push
             echo "✅ 已提交: 历史文件 $HISTORY_CHANGED 个, 报告文件 $REPORTS_CHANGED 个"
           fi
