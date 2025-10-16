@@ -22,7 +22,12 @@ class GitHubScanner:
         if not token:
             raise ValueError("GitHub Token is required. Please set GITHUB_TOKEN in .env file")
         
-        self.github = Github(token)
+        # 配置超时和重试参数，避免长时间等待
+        self.github = Github(
+            token,
+            timeout=30,  # 设置30秒超时
+            retry=None   # 禁用自动重试，我们自己处理
+        )
         self.rate_limit_remaining = None
         self.rate_limit_reset = None
         

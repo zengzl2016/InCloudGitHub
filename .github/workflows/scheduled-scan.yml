@@ -114,7 +114,8 @@ jobs:
           echo "**扫描状态**: ${{ steps.scan.outputs.scan_status }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [ -f scan_reports/*.txt ]; then
+          # 检查是否存在 txt 文件
+          if ls scan_reports/*.txt 1> /dev/null 2>&1; then
             echo "## 📊 扫描统计" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "- 🔴 高置信度问题: ${{ steps.analyze.outputs.high_confidence }}" >> $GITHUB_STEP_SUMMARY
