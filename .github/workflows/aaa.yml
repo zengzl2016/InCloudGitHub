@@ -36,7 +36,6 @@ jobs:
 
       
       - name: 📊 生成扫描摘要
-        if: always()
         run: |
           echo "# 🔍 扫描完成" >> $GITHUB_STEP_SUMMARY
           python aaa.py
