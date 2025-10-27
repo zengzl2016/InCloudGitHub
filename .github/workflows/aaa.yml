@@ -31,7 +31,7 @@ jobs:
         run: |
           echo "GITHUB_TOKEN=${{ secrets.GH_SCAN_TOKEN }}" > .env
           echo "OUTPUT_DIR=./scan_reports" >> .env
-          mkdir -p scan_reports
+          mkdir -p aaa
       
 
       
