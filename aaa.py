@@ -4,7 +4,7 @@
 import os
 from datetime import datetime
 from typing import List, Dict
-from config import OUTPUT_DIR
+
 
 OUTPUT_DIR = './aaa'
 
