@@ -39,3 +39,12 @@ jobs:
         run: |
           echo "# 🔍 扫描完成" >> $GITHUB_STEP_SUMMARY
           python aaa.py
+
+      - name: 📤 上传报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-scan-report-${{ github.run_number }}
+          path: aaa/
+          retention-days: 90
+          if-no-files-found: ignore
