@@ -55,4 +55,19 @@ jobs:
         run: |         
           # 添加扫描历史
           git add aaa/
+          # 提交消息
+          COMMIT_MSG="📝 更新扫描数据 [skip ci]"
+         
+          git commit -m "$COMMIT_MSG"
+          
+          # 同步远程更改，避免并发推送冲突
+          git pull --rebase origin main || {
+            echo "⚠️ Rebase 冲突，尝试使用本地版本"
+            git rebase --abort
+            git pull --rebase --strategy-option=ours origin main
+          }
+          
+          git push
+
+          
           
