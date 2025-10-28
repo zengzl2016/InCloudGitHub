@@ -48,3 +48,11 @@ jobs:
           path: aaa/
           retention-days: 90
           if-no-files-found: ignore
+
+
+      - name: 💾 提交扫描历史和报告
+        if: always()
+        run: |         
+          # 添加扫描历史
+          git add aaa/
+          
