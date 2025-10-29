@@ -54,6 +54,9 @@ jobs:
         if: always()
         run: |         
           # 添加扫描历史
+
+          git config user.name "gaocaipeng"
+          git config user.email "2540225402@qq.com"
           git add aaa/
           # 提交消息
           COMMIT_MSG="📝 更新扫描数据 [skip ci]"
